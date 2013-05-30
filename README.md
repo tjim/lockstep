@@ -83,6 +83,13 @@ unless they have an unusually fast network connection.
 
 * Frame minibuffers are not synchronized.
 
+## Options
+
+* By default lockstep does not synchronize popups.  If you want to synchronize popups,
+e.g., for auto-complete mode, then do
+
+    (lockstep-popup)
+
 ## Authors
 
 Trevor Jim
