@@ -70,7 +70,9 @@
                              (and (window-live-p window)
                                   (equal (window-buffer window) (current-buffer))))
                            (loop for frame in other-frames nconcing (window-list frame)))
-            do (set-window-point window (point))))))
+            do (progn
+                 (set-window-point window (point))
+                 (set-frame-selected-window (window-frame window) window))))))
 
 (defun lockstep-popup ()
   "Modify the popup library so that popups in a buffer are shown in all windows showing the buffer.
