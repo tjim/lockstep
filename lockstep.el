@@ -19,8 +19,9 @@
   "Synchronize this frame's windows and points."
   (interactive)
   (when (not (memq (selected-frame) lockstep-frames))
-    (push (selected-frame) lockstep-frames)
-    (lockstep-frame)))
+    (let ((a-lockstep-frame (when lockstep-frames (car lockstep-frames))))
+      (push (selected-frame) lockstep-frames)
+      (lockstep-frame a-lockstep-frame))))
 
 (defun turn-off-lockstep ()
   "Turn off synchronization for this frame."
@@ -32,12 +33,12 @@
   (and (> (length lockstep-frames) 1)
        (memq (selected-frame) lockstep-frames)))
 
-(defun lockstep-frame ()
+(defun lockstep-frame (&optional master-frame)
   "Synchronize window configurations of frames."
   (when (lockstep-needed)
     (remove-hook 'window-configuration-change-hook 'lockstep-frame)
     (unwind-protect
-        (let* ((this-frame (selected-frame))
+        (let* ((this-frame (or master-frame (selected-frame)))
                (other-frames (remove-if (lambda (frame) (equal this-frame frame)) lockstep-frames)))
           (loop for other-frame in other-frames
                 do (let ((this-frame-windows
@@ -57,7 +58,12 @@
 
                                         ; force this-frame-windows and other-frame-windows to have same configurations
                      (while this-frame-windows
-                       (window-state-put (window-state-get (pop this-frame-windows)) (pop other-frame-windows))))))
+                       (let ((this-frame-window (pop this-frame-windows))
+                             (other-frame-window (pop other-frame-windows)))
+                         (window-state-put (window-state-get this-frame-window) other-frame-window)
+                         (when master-frame
+                           ; if called from turn-on-lockstep, synchronize point as well
+                           (set-window-point other-frame-window (window-point this-frame-window))))))))
       (add-hook 'window-configuration-change-hook 'lockstep-frame))))
 
 (defun lockstep-point ()
